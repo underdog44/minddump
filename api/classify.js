@@ -13,10 +13,18 @@ export default async function handler(req, res) {
 
   const now = new Date().toISOString();
   const prompt = `You are a personal assistant. Current time: ${now}.
-Respond with ONLY valid JSON, no markdown, no backticks:
-{"title":"...","bucket":"Work|Personal|Watch / Read|Creative|Health|Finance|Other","priority":"high|medium|low","dueDate":"ISO string or null","timeframe":"Today|This week|This month|Someday|null","note":"..."}
-Parse natural time like "today 3pm", "tomorrow", "this friday" into exact ISO datetimes.
-Input: ${text}`;
+Classify this input and respond with ONLY a JSON object. No markdown, no code blocks, no extra text, just the raw JSON object.
+Required fields:
+- title: short clean version of the input (string)
+- bucket: exactly one of: Work, Personal, Watch / Read, Creative, Health, Finance, Other
+- priority: exactly one of: high, medium, low
+- dueDate: ISO 8601 datetime string if time-sensitive (like "today 3pm", "tomorrow", "this friday"), otherwise null
+- timeframe: exactly one of: Today, This week, This month, Someday, or null
+- note: one short sentence tip, or null
+
+Input to classify: ${text}
+
+Respond with only the JSON object, starting with { and ending with }`;
 
   try {
     const r = await fetch(
@@ -24,14 +32,30 @@ Input: ${text}`;
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 200, temperature: 0.1 } })
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: 300,
+            temperature: 0.1,
+            responseMimeType: 'application/json'
+          }
+        })
       }
     );
+
     const raw = await r.text();
     if (!r.ok) return res.status(502).json({ error: 'Gemini failed', detail: raw });
+
     const data = JSON.parse(raw);
-    const txt = data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-    return res.status(200).json(JSON.parse(txt));
+    const txt = data.candidates[0].content.parts[0].text;
+
+    // Extract JSON from response - handle any wrapping
+    const jsonMatch = txt.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: 'No JSON in response', raw: txt });
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return res.status(200).json(parsed);
+
   } catch(e) {
     return res.status(500).json({ error: e.message });
   }

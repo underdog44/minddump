@@ -752,13 +752,28 @@ async function sendMessage(){
 }
 
 async function classifyWithAI(text){
-  const resp=await fetch('/api/classify',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({text})
-  });
-  if(!resp.ok) throw new Error('API error: '+resp.status);
-  return await resp.json();
+  const url = window.location.origin + '/api/classify';
+  console.log('[MindDump] Calling:', url);
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text})
+    });
+  } catch(fetchErr) {
+    console.error('[MindDump] Fetch failed:', fetchErr);
+    throw fetchErr;
+  }
+  console.log('[MindDump] Response status:', resp.status);
+  if(!resp.ok) {
+    const errText = await resp.text();
+    console.error('[MindDump] Error body:', errText);
+    throw new Error('API error: '+resp.status+' '+errText);
+  }
+  const result = await resp.json();
+  console.log('[MindDump] AI result:', result);
+  return result;
 }
 
 function localClassify(text){

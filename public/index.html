@@ -269,20 +269,17 @@
         <div class="setting-group">
           <div class="setting-row">
             <div>
-              <div class="setting-label">Gemini API Key</div>
-              <div class="setting-sub">Free at aistudio.google.com → Get API key</div>
+              <div class="setting-label">AI Engine</div>
+              <div class="setting-sub">Gemini 2.0 Flash — free via server</div>
             </div>
-          </div>
-          <div class="setting-row">
-            <input class="api-key-input" id="apiKeyInput" type="password" placeholder="AIza..." />
-            <button class="save-key-btn" onclick="saveApiKey()">Save</button>
+            <span style="font-size:12px;color:var(--teal);">Active ✓</span>
           </div>
           <div class="setting-row">
             <div>
-              <div class="setting-label">AI Model</div>
-              <div class="setting-sub">Gemini 2.0 Flash — fast &amp; free</div>
+              <div class="setting-label">API Key location</div>
+              <div class="setting-sub">Set GEMINI_API_KEY in Vercel → Settings → Environment Variables</div>
             </div>
-            <span style="font-size:12px;color:var(--teal);">Gemini 2.0 ✓</span>
+            <span style="font-size:18px;">🔑</span>
           </div>
         </div>
 
@@ -749,36 +746,19 @@ async function sendMessage(){
     const fallback=localClassify(val);
     const item={id:genId(),title:val,bucket:fallback.bucket,dueDate:fallback.dueDate,timeframe:fallback.timeframe,status:'active',createdAt:new Date().toISOString(),priority:fallback.priority,source:'chat'};
     items.unshift(item);save();
-    addChatMsg(`Saved to <b>${item.bucket}</b>! ${apiKey?'(AI offline — used local classifier)':'💡 Tip: Add your free Gemini API key in Settings for smarter bucketing!'}`,'a');
+    addChatMsg(`Saved to <b>${item.bucket}</b> using smart local classifier. <span style="color:var(--muted);font-size:11px">(AI unavailable — check server config)</span>`,'a');
   }
   document.getElementById('sendBtn').disabled=false;
 }
 
 async function classifyWithAI(text){
-  if(!apiKey) throw new Error('No API key');
-  const now=new Date().toISOString();
-  const prompt=`You are a personal assistant that classifies thoughts, tasks, and reminders. Current time: ${now}.
-Respond with ONLY valid JSON (no markdown, no backticks) with these fields:
-- title: string (clean, concise version of the input)
-- bucket: one of "Work", "Personal", "Watch / Read", "Creative", "Health", "Finance", "Other"
-- priority: "high" | "medium" | "low"
-- dueDate: ISO 8601 datetime string if time-sensitive, null otherwise. Parse natural language like "today at 3pm", "tomorrow morning", "this Friday", "next Monday 11am", "end of month" into exact ISO datetimes based on current time.
-- timeframe: "Today" | "This week" | "This month" | "Someday" | null (use when no exact time but some urgency)
-- note: optional short tip or acknowledgment (max 10 words)
-
-User input: ${text}`;
-  const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+  const resp=await fetch('/api/classify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      contents:[{parts:[{text:prompt}]}],
-      generationConfig:{maxOutputTokens:300,temperature:0.1}
-    })
+    body:JSON.stringify({text})
   });
   if(!resp.ok) throw new Error('API error: '+resp.status);
-  const data=await resp.json();
-  const raw=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-  return JSON.parse(raw);
+  return await resp.json();
 }
 
 function localClassify(text){

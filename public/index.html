@@ -910,7 +910,9 @@ async function sm(){
   hty();
   const{dueDate,timeframe,priority}=pdt(val);
   const bucket=result.bucket||dBkt(val);
-  const finalDue=result.dueDate||dueDate;
+  // Local parser wins if it detected an explicit date keyword — Gemini only fills gap
+  const hasExplicitDate=/\btoday\b|\btonight\b|\btomorrow\b|\bmonday\b|\btuesday\b|\bwednesday\b|\bthursday\b|\bfriday\b|\bsaturday\b|\bsunday\b|\bjan\b|\bfeb\b|\bmar\b|\bapr\b|\bjun\b|\bjul\b|\baug\b|\bsep\b|\boct\b|\bnov\b|\bdec\b/i.test(val);
+  const finalDue=hasExplicitDate?dueDate:(result.dueDate||dueDate);
   const item={id:gid(),title:result.title||val,bucket,dueDate:finalDue,timeframe:finalDue?null:(result.timeframe||timeframe),status:'active',createdAt:new Date().toISOString(),priority:result.priority||priority,source:'chat'};
   items.unshift(item);
   const newBkt=checkAutoSubBucket(val,bucket);

@@ -25,23 +25,17 @@
   --D:"Cormorant Garamond",Georgia,serif;
   --B:"Inter",system-ui,sans-serif;
 }
-html{height:100%;background:var(--k)}
-body{
-  height:100%;
-  background:var(--k);
-  color:var(--t1);
-  font-family:var(--B);
-  -webkit-font-smoothing:antialiased;
-  overflow:hidden;
-  position:fixed;
-  width:100%;
-  top:0;left:0;
-}
+html,body{margin:0;padding:0;background:var(--k);overflow:hidden}
+body{color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased}
 #app{
-  height:100%;
   display:flex;
   flex-direction:column;
   overflow:hidden;
+  /* 100svh = exact visible area on iOS Safari, no browser-bar gap */
+  height:100svh;
+  height:100dvh;
+  max-height:100svh;
+  max-height:100dvh;
 }
 
 /* TOP */
@@ -83,11 +77,10 @@ body{
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   padding:14px 16px 20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
   min-height:0;
 }
+.sa>*{margin-bottom:10px}
+.sa>*:last-child{margin-bottom:0}
 .sa::-webkit-scrollbar{width:0}
 
 /* STATS */
@@ -794,13 +787,13 @@ function addTT(){const v=document.getElementById('ti').value.trim();if(!v)return
 function rj(){
   const area=document.getElementById('sa');if(!area)return;
   const tk=new Date().toDateString();
-  const te=journals.find(j=>j.date===tk);
   const ds=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  // Always show empty fields — saved entries shown as cards below
   let html=`<div class="jwrite">
     <div class="jdate">${ds}</div>
-    <input class="jhead-in" id="jH" type="text" placeholder="Title your entry..." value="${te&&te.heading?esc(te.heading):''}"/>
+    <input class="jhead-in" id="jH" type="text" placeholder="Title your entry..."/>
     <div class="jdiv"></div>
-    <textarea class="jbody-in" id="jB" placeholder="Write freely, no limits...">${te?esc(te.text):''}</textarea>
+    <textarea class="jbody-in" id="jB" placeholder="Write freely, no limits..."></textarea>
     <div class="jftr"><button class="jsave" onclick="sjE()">Save entry</button></div>
   </div>`;
 
@@ -832,15 +825,10 @@ function sjE(){
   if(i>=0)journals[i]=entry;else journals.unshift(entry);
   svJ();
   toast('Entry saved');
-  // Clear fields and re-render immediately
   if(cView==='journal'){
-    // Clear the inputs first
-    const jh=document.getElementById('jH');
-    const jb=document.getElementById('jB');
-    if(jh)jh.value='';
-    if(jb){jb.value='';jb.style.height='auto';}
-    // Re-render to show saved card below
+    // Force full re-render — this rebuilds the DOM including fresh empty inputs
     rj();
+    // After rj() rebuilds DOM, inputs are fresh empty fields ready for next entry
   }
 }
 

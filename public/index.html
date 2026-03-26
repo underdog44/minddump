@@ -228,16 +228,18 @@ select.mi option{background:var(--k3)}
 .bkt-toast.s{opacity:1}
 
 /* MOBILE TABS */
-.mtabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2)}
 @media(max-width:768px){
   .sb{display:none}
   .cp{width:100%;border-left:none}
   .ctr{display:none}
-  .mtabs{display:flex!important}
+  .mobile-tabs{display:flex!important}
   .ctr.mon{display:flex}
   .cp.mon{display:flex}
   .cp:not(.mon){display:none}
 }
+.mobile-tabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.mtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;font-size:10px;color:var(--t3);transition:color 0.12s;border:none;background:transparent;font-family:var(--B)}
+.mtab.on{color:var(--t1)}
 .mtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 3px;cursor:pointer;font-size:9px;letter-spacing:0.3px;text-transform:uppercase;color:var(--t4);transition:color 0.12s;border:none;background:transparent;font-family:var(--B);font-weight:500}
 .mtab.on{color:var(--t1)}
 .em{text-align:center;padding:40px 20px;color:var(--t4);font-family:var(--D);font-size:15px;font-weight:300;letter-spacing:0.3px;font-style:italic;flex-shrink:0}
@@ -370,24 +372,24 @@ select.mi option{background:var(--k3)}
   </div>
 
   <!-- MOBILE TABS: Add → Today → Home → Journal → Settings -->
-  <div class="mtabs" id="mts">
-    <button class="mtab" onclick="ms('chat',this)">
+  <div class="mobile-tabs" id="mobileTabs">
+    <button class="mtab" onclick="mobileTab('chat',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Add
     </button>
-    <button class="mtab" onclick="ms('today',this)">
+    <button class="mtab" onclick="mobileTab('today',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Today
     </button>
-    <button class="mtab on" onclick="ms('home',this)">
+    <button class="mtab on" onclick="mobileTab('home',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </button>
-    <button class="mtab" onclick="ms('journal',this)">
+    <button class="mtab" onclick="mobileTab('journal',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Journal
     </button>
-    <button class="mtab" onclick="ms('settings',this)">
+    <button class="mtab" onclick="mobileTab('settings',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </button>
@@ -1102,6 +1104,7 @@ document.getElementById('mb').addEventListener('click',()=>startVoice(document.g
 document.getElementById('mb2').addEventListener('click',()=>startVoice(document.getElementById('ti')));
 
 // ── MOBILE ──
+function mobileTab(tab,el){return ms(tab,el);}
 function ms(tab,el){
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('on'));
   if(el)el.classList.add('on');

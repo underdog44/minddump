@@ -25,24 +25,20 @@
   --D:"Cormorant Garamond",Georgia,serif;
   --B:"Inter",system-ui,sans-serif;
 }
-html{height:100%;height:-webkit-fill-available}
+html,body{height:100%;background:var(--k);overflow:hidden}
 body{
-  height:100%;
-  height:-webkit-fill-available;
-  background:var(--k);
   color:var(--t1);
   font-family:var(--B);
   -webkit-font-smoothing:antialiased;
-  overflow:hidden;
-  position:fixed;
-  width:100%;
 }
 #app{
-  height:100%;
+  height:100dvh;
   height:-webkit-fill-available;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
   padding-top:var(--sit);
+  max-height:100dvh;
 }
 
 /* TOP */
@@ -80,18 +76,19 @@ body{
 /* SCROLL - CRITICAL FIX */
 .sa{
   flex:1;
-  overflow-y:scroll;
+  overflow-y:auto;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  padding:14px 16px;
+  padding:14px 16px 32px;
   display:flex;
   flex-direction:column;
   gap:10px;
   min-height:0;
-  overscroll-behavior:contain;
+  overscroll-behavior-y:contain;
+  /* iOS Safari scroll fix */
+  height:0;
 }
-.sa::-webkit-scrollbar{width:2px}
-.sa::-webkit-scrollbar-thumb{background:var(--k6);border-radius:2px}
+.sa::-webkit-scrollbar{width:0}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;flex-shrink:0}
@@ -270,6 +267,22 @@ select.mi option{background:var(--k3)}
 .mtab.on{color:var(--t1)}
 .em{text-align:center;padding:40px 20px;color:var(--t4);font-family:var(--D);font-size:15px;font-weight:300;letter-spacing:0.3px;font-style:italic;flex-shrink:0}
 .h{display:none!important}
+
+/* ── TODAY SCHEDULE ── */
+.td-section{background:var(--k2);border:1px solid var(--w2);border-radius:var(--r);overflow:hidden;flex-shrink:0}
+.td-sh{display:flex;align-items:baseline;gap:10px;padding:12px 15px;border-bottom:1px solid var(--w2)}
+.td-sl{font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);font-weight:500;flex:1}
+.td-sd{font-size:10px;color:var(--t4)}
+.td-item{display:flex;align-items:flex-start;gap:12px;padding:11px 15px;border-bottom:1px solid var(--w1);transition:background 0.12s}
+.td-item:last-child{border-bottom:none}
+.td-item:hover{background:var(--w1)}
+.td-past{opacity:0.45}
+.td-time{font-size:11.5px;color:var(--t3);font-variant-numeric:tabular-nums;width:52px;flex-shrink:0;padding-top:2px;font-weight:400;letter-spacing:0.2px}
+.td-line{width:2px;border-radius:2px;min-height:36px;flex-shrink:0;opacity:0.5}
+.td-body{flex:1;min-width:0}
+.td-title{font-size:13.5px;color:var(--t1);line-height:1.4;font-weight:300;letter-spacing:0.05px}
+.td-bucket{font-size:10px;letter-spacing:0.6px;text-transform:uppercase;margin-top:3px;opacity:0.7}
+.td-acts{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -562,9 +575,23 @@ function pdt(text){
 }
 
 // ── BUCKET DETECT ──
+function fuzzyMatch(a,b){
+  // Returns true if strings are similar (one is substring of other, or differ by 1-2 chars)
+  a=a.toLowerCase();b=b.toLowerCase();
+  if(a.includes(b)||b.includes(a))return true;
+  if(Math.abs(a.length-b.length)>3)return false;
+  let diff=0;const len=Math.min(a.length,b.length);
+  for(let i=0;i<len;i++)if(a[i]!==b[i])diff++;
+  return diff<=2;
+}
 function dBkt(text){
   const l=text.toLowerCase();
-  for(const b of cBuckets)if(l.includes(b.id.toLowerCase()))return b.id;
+  // Check custom buckets with fuzzy match
+  for(const b of cBuckets){
+    const bid=b.id.toLowerCase();
+    const words=l.split(/\s+/);
+    if(words.some(w=>fuzzyMatch(w,bid)||bid.includes(w)||w.includes(bid)))return b.id;
+  }
   if(/meeting|work|office|project|deadline|client|report|email|boss|colleague|deliverable|mksy|scholarship|bocw|audit/.test(l))return'Work';
   if(/watch|movie|film|series|show|netflix|read|book|podcast|documentary/.test(l))return'Watch / Read';
   if(/gym|doctor|medicine|health|workout|diet|sleep|hospital|dentist|yoga|fitness/.test(l))return'Health';
@@ -634,7 +661,8 @@ function rm(){
     const ids=new Set(tl.map(i=>i.id));
     vi=[...tl,...nd.filter(i=>!ids.has(i.id))];
   }else if(cView==='today'){
-    vi=list.filter(i=>i.status==='active'&&i.dueDate&&(isT(new Date(i.dueDate))||new Date(i.dueDate)<now));
+    // Today view handled separately with two sections
+    vi=[];
   }else if(cView==='all'){vi=list;}
   else{vi=list.filter(i=>i.bucket===cView);}
 
@@ -644,6 +672,7 @@ function rm(){
 
   if(cView==='home'||cView==='today'){
     html+=`<div class="stats"><div class="sc"><div class="sn">${actT}</div><div class="sl">Active</div></div><div class="sc"><div class="sn">${ttasks.filter(t=>!t.done).length}</div><div class="sl">Today</div></div><div class="sc"><div class="sn">${dnT}</div><div class="sl">Done</div></div></div>`;
+    if(cView==='today'){html+=todayViewHtml();return void(document.getElementById('sa').innerHTML=html);}
     html+=tbHtml();
   }
 
@@ -686,6 +715,77 @@ function tbHtml(){
   const rows=ttasks.length?ttasks.map((t,i)=>`<div class="tir"><div class="tck${t.done?' ck':''}" onclick="tgT(${i})"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tit${t.done?' dn':''}">${esc(t.text)}</div><button class="tdl" onclick="rmT(${i})">×</button></div>`).join(''):`<div style="font-size:11.5px;color:var(--t4);padding:2px 0;font-weight:300">Use "Today list" tab in chat →</div>`;
   return`<div class="tb"><div class="tbh"><div class="tbt">Today</div><div class="tbd">${ds}</div></div><div class="tbl">${rows}</div></div>`;
 }
+
+function todayViewHtml(){
+  const now=new Date();
+  const ds=now.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+  // Schedule: all items with dueDate today, sorted by time
+  const schedule=items.filter(i=>i.status==='active'&&i.dueDate&&isT(new Date(i.dueDate)))
+    .sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+  // Also overdue (past due not today) — show at top in red
+  const overdue=items.filter(i=>i.status==='active'&&i.dueDate&&new Date(i.dueDate)<now&&!isT(new Date(i.dueDate)))
+    .sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+  // Tasks: manual today list
+  const tasks=ttasks;
+
+  let html='';
+
+  // Overdue strip
+  if(overdue.length){
+    html+=`<div style="background:rgba(232,160,180,0.05);border:1px solid rgba(232,160,180,0.13);border-radius:var(--rsm);padding:8px 13px;font-size:12px;color:#e8a0b4;flex-shrink:0">${overdue.length} overdue — <span style="cursor:pointer;text-decoration:underline" onclick="sv('all',null)">view all</span></div>`;
+  }
+
+  // Today's schedule section
+  html+=`<div class="td-section">
+    <div class="td-sh">
+      <div class="td-sl">Today's schedule</div>
+      <div class="td-sd">${ds}</div>
+    </div>`;
+  if(schedule.length){
+    html+=schedule.map(item=>{
+      const d=new Date(item.dueDate);
+      const timeStr=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+      const isPast=d<now;
+      const bc=(allB().find(b=>b.id===item.bucket)||{c:'var(--t4)'}).c;
+      return`<div class="td-item ${isPast?'td-past':''}">
+        <div class="td-time">${timeStr}</div>
+        <div class="td-line" style="background:${bc}"></div>
+        <div class="td-body">
+          <div class="td-title">${esc(item.title)}</div>
+          <div class="td-bucket" style="color:${bc}">${esc(item.bucket)}</div>
+          <div class="td-acts">
+            <button class="ab dn" onclick="md('${item.id}')">Done</button>
+            <button class="ab ed" onclick="oe('${item.id}')">Edit</button>
+            <button class="ab" onclick="os('${item.id}')">Reschedule</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    html+=`<div style="font-size:12.5px;color:var(--t4);padding:14px 0;font-style:italic;font-family:var(--D)">Nothing scheduled for today</div>`;
+  }
+  html+=`</div>`;
+
+  // Tasks section
+  html+=`<div class="td-section">
+    <div class="td-sh">
+      <div class="td-sl">Tasks</div>
+    </div>`;
+  if(tasks.length){
+    html+=tasks.map((t,i)=>`<div class="tir">
+      <div class="tck${t.done?' ck':''}" onclick="tgT(${i})">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="tit${t.done?' dn':''}">${esc(t.text)}</div>
+      <button class="tdl" onclick="rmT(${i})">×</button>
+    </div>`).join('');
+  } else {
+    html+=`<div style="font-size:12.5px;color:var(--t4);padding:10px 0;font-style:italic;font-family:var(--D)">Use "Today list" tab in chat to add tasks →</div>`;
+  }
+  html+=`</div>`;
+
+  return html;
+}
 function tgT(i){ttasks[i].done=!ttasks[i].done;svT();}
 function rmT(i){ttasks.splice(i,1);svT();}
 function addTT(){const v=document.getElementById('ti').value.trim();if(!v)return;ttasks.push({id:gid(),text:v,done:false});document.getElementById('ti').value='';document.getElementById('ti').style.height='auto';svT();toast('Added to today');}
@@ -704,16 +804,18 @@ function rj(){
     <div class="jftr"><button class="jsave" onclick="sjE()">Save entry</button></div>
   </div>`;
 
-  const past=journals.filter(j=>j.date!==tk).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if(past.length){
+  // Show ALL entries sorted by date — today's at top if saved
+  const allEntries=journals.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(allEntries.length){
     html+=`<div class="jlbl">Saved entries</div>`;
-    html+=past.map(j=>{
-      const preview=(j.text||'').slice(0,100).replace(/\n/g,' ');
-      const dateStr=new Date(j.date).toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+    html+=allEntries.map(j=>{
+      const preview=(j.text||'').slice(0,120).replace(/\n/g,' ');
+      const isToday=j.date===tk;
+      const dateStr=isToday?'Today':new Date(j.date).toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
       return`<div class="je-card" onclick="openJModal('${j.date}')">
-        <div class="je-date">${dateStr}</div>
+        <div class="je-date" style="${isToday?'color:var(--t2)':''}">${dateStr}${isToday?' · just saved':''}</div>
         ${j.heading?`<div class="je-title">${esc(j.heading)}</div>`:''}
-        <div class="je-preview">${esc(preview)}${(j.text||'').length>100?'…':''}</div>
+        <div class="je-preview">${esc(preview)}${(j.text||'').length>120?'…':''}</div>
       </div>`;
     }).join('');
   }
@@ -729,9 +831,14 @@ function sjE(){
   const i=journals.findIndex(j=>j.date===tk);
   if(i>=0)journals[i]=entry;else journals.unshift(entry);
   svJ();
+  // Immediately re-render so saved entries appear below
+  if(cView==='journal'){
+    rj();
+    // Show saved confirmation in the date label
+    const dl=document.querySelector('.jdate');
+    if(dl)dl.textContent=dl.textContent.replace(' ✓ Saved','')+'  ✓ Saved';
+  }
   toast('Entry saved');
-  // Re-render to show the entry if it was just created
-  setTimeout(()=>{if(cView==='journal')rj();},100);
 }
 
 function openJModal(dateKey){

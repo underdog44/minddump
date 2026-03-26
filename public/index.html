@@ -486,7 +486,7 @@ async function sendMsg(){
   let result={};try{const r=await fetch('/api/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:val})});if(r.ok)result=await r.json();}catch(e){}
   hideTyping();const{dueDate,timeframe,priority}=parseDateTime(val);const bucket=result.bucket||detectBucket(val);
   const item={id:gid(),title:result.title||val,bucket,dueDate,timeframe:dueDate?null:(result.timeframe||timeframe),status:'active',createdAt:new Date().toISOString(),priority:result.priority||priority,source:'chat'};
-  items.unshift(item);const newBkt=checkAutoSubBucket(val,bucket);if(newBkt)item.bucket=newBkt;save();
+  items.unshift(item);const newBkt=checkAutoSubBucket(item);if(newBkt)item.bucket=newBkt;save();
   let rep=`Saved to <b>${esc(item.bucket)}</b>`;if(dueDate)rep+=` · ${fmt(new Date(dueDate))}`;else if(item.timeframe)rep+=` · ${item.timeframe}`;addMsg(rep,'a');
   isSending=false;document.getElementById('sendBtn').disabled=false;if(cView==='home'||cView==='today')render();
 }
@@ -515,8 +515,71 @@ function clearDone(){items=items.filter(i=>i.status!=='done');save();renderSetti
 function nukeAll(){items=[];ttasks=[];journals=[];cBuckets=[];save();saveT();saveJ();saveB();renderSettings();toast('Reset complete');}
 
 function parseDateTime(text){const l=text.toLowerCase(),now=new Date();let h=null,m=0;const tRe=/(?:before|by|at|@|around)?\s*(\d{1,2})(?:[:.:](\d{2}))?\s*(am|pm)/i;const tm=l.match(tRe);if(tm){h=parseInt(tm[1]);m=parseInt(tm[2]||'0');if(tm[3].toLowerCase()==='pm'&&h<12)h+=12;if(tm[3].toLowerCase()==='am'&&h===12)h=0;}if(!tm){const t24=l.match(/(?:at|by|before)?\s*(\d{1,2}):(\d{2})(?!\s*[ap]m)/);if(t24){h=parseInt(t24[1]);m=parseInt(t24[2]);}}if(!tm&&h===null){if(/midnight/.test(l))h=0;else if(/noon|midday/.test(l))h=12;else if(/morning/.test(l))h=9;else if(/afternoon/.test(l))h=14;else if(/evening/.test(l))h=18;else if(/night/.test(l))h=21;}const dh=h!==null?h:9;const mk=d=>{const r=new Date(d);r.setHours(dh,m,0,0);return r;};if(/\btoday\b|\btonight\b|\bnow\b|\burgent\b|\basap\b/.test(l)){const d=mk(now);if(h===null)d.setHours(23,59,0,0);return{dueDate:d.toISOString(),timeframe:null,priority:'high'};}if(/\btomorrow\b/.test(l)){const d=new Date(now);d.setDate(d.getDate()+1);return{dueDate:mk(d).toISOString(),timeframe:null,priority:'high'};}const days={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6,sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};for(const[n,dw]of Object.entries(days)){if(new RegExp('\\b'+n+'\\b').test(l)){const d=new Date(now);let diff=dw-d.getDay();const nIdx=l.indexOf(n);const isNext=nIdx>0&&/next\s*$/.test(l.slice(0,nIdx));if(diff<=0||isNext)diff+=7;d.setDate(d.getDate()+diff);return{dueDate:mk(d).toISOString(),timeframe:null,priority:'high'};}}if(h!==null){const d=new Date(now);d.setHours(h,m,0,0);if(d<now)d.setDate(d.getDate()+1);return{dueDate:d.toISOString(),timeframe:null,priority:'high'};}if(/this week|end of week/.test(l))return{dueDate:null,timeframe:'This week',priority:'medium'};if(/this month|end of month/.test(l))return{dueDate:null,timeframe:'This month',priority:'medium'};return{dueDate:null,timeframe:'Someday',priority:'low'};}
-function detectBucket(text){const l=text.toLowerCase();for(const b of cBuckets){if(l.split(/\s+/).some(w=>w===b.id.toLowerCase()))return b.id;}if(/meeting|work|office|project|deadline|client|report|email|boss/.test(l))return'Work';if(/watch|movie|film|series|show|netflix|read|book|podcast/.test(l))return'Watch / Read';if(/gym|doctor|medicine|health|workout|diet|sleep|hospital/.test(l))return'Health';if(/paint|draw|art|music|write|create|design|build|channel|idea|youtube/.test(l))return'Creative';if(/money|pay|bill|invest|bank|emi|expense|salary|tax/.test(l))return'Finance';if(/remind|call|pick|buy|order|shop|family|wife|kids|home|birthday/.test(l))return'Personal';return'Other';}
-function checkAutoSubBucket(text,bucket){const l=text.toLowerCase();const stop=new Set(['the','and','for','this','that','with','have','will','want','just','some','make','need']);const words=l.replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>=4&&!stop.has(w));for(const word of words){const matches=items.filter(i=>i.bucket===bucket&&i.status==='active'&&i.title.toLowerCase().includes(word));if(matches.length>=3){const exists=cBuckets.some(b=>b.id.toLowerCase()===word);const isDefault=DB.some(b=>b.id.toLowerCase().includes(word));if(!exists&&!isDefault){const name=word.charAt(0).toUpperCase()+word.slice(1);const cols=['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'];cBuckets.push({id:name,c:cols[cBuckets.length%cols.length],auto:true});saveB();bktToast('"'+name+'" bucket created automatically');return name;}}}return null;}
+// Gemini is primary. This is only the fallback if API fails.
+function detectBucket(text){
+  const l=text.toLowerCase();
+  // Check user-created buckets first — exact word match
+  for(const b of cBuckets){if(l.split(/\s+/).some(w=>w===b.id.toLowerCase()||b.id.toLowerCase()===w))return b.id;}
+  if(/meeting|work|office|project|deadline|client|report|email|boss|bocw|mksy|scheme|govt|government|audit|tender|compliance/.test(l))return'Work';
+  if(/watch|movie|film|series|show|netflix|read|book|podcast|documentary/.test(l))return'Watch / Read';
+  if(/gym|doctor|medicine|health|workout|diet|sleep|hospital|dentist|yoga/.test(l))return'Health';
+  if(/paint|draw|art|music|write|create|design|build|channel|idea|youtube|startup/.test(l))return'Creative';
+  if(/money|pay|bill|invest|bank|emi|expense|salary|tax|gst|insurance|loan/.test(l))return'Finance';
+  if(/remind|call|pick|buy|order|shop|family|wife|kids|home|birthday|friend|dinner|travel/.test(l))return'Personal';
+  return'Other';
+}
+
+// Auto sub-bucket: extracts meaningful keywords from the new item's title,
+// checks if 2+ OTHER existing active items also contain that keyword,
+// if yes — creates a sub-bucket and retroactively moves ALL matching items into it.
+function checkAutoSubBucket(newItem){
+  const STOP = new Set([
+    'the','and','for','this','that','with','have','will','want','just','some',
+    'make','need','from','they','been','more','than','into','when','then',
+    'also','your','our','get','got','put','let','now','its','his','her',
+    'was','are','has','had','can','all','not','one','but','out','use',
+    'way','may','new','did','see','him','she','you','me','he','we','us',
+    'do','to','of','in','on','at','by','is','it','or','an','as','up',
+    'add','set','run','try','ask','say','day','old','own','two','how',
+    'per','off','yet','via','due','re','vs'
+  ]);
+
+  // Extract meaningful words: letters/digits only, min 3 chars, not a stopword
+  const titleWords = newItem.title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g,'')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !STOP.has(w) && !/^\d+$/.test(w));
+
+  for(const word of titleWords){
+    // Already a bucket?
+    if(cBuckets.some(b=>b.id.toLowerCase()===word)) continue;
+    if(DB.some(b=>b.id.toLowerCase()===word)) continue;
+
+    // Count ALL active items (including the new one) whose title contains this word
+    const matches = items.filter(i =>
+      i.status==='active' &&
+      i.title.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).includes(word)
+    );
+
+    // Trigger when 2+ OTHER items match (so total >= 3 including new item, or >= 2 if generous)
+    if(matches.length >= 2){
+      const name = word.toUpperCase(); // e.g. "bocw" → "BOCW" feels right for acronyms
+      const cols = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'];
+      cBuckets.push({id:name, c:cols[cBuckets.length % cols.length], auto:true});
+      saveB();
+
+      // Retroactively move ALL matching items into the new bucket
+      let movedCount = 0;
+      matches.forEach(i => { i.bucket = name; movedCount++; });
+      save();
+
+      bktToast(`"${name}" bucket created — ${movedCount} items grouped`);
+      return name;
+    }
+  }
+  return null;
+}
 
 let voiceRec=null,audioCtx=null,analyser=null,waveRAF=null;
 function startVoice(targetInput){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Voice not supported');return;}activeVoiceTarget=targetInput;document.getElementById('voiceOverlay').classList.remove('h');document.getElementById('voiceTranscript').textContent='Speak now...';startWaveform();voiceRec=new SR();voiceRec.lang='en-IN';voiceRec.interimResults=true;voiceRec.maxAlternatives=1;voiceRec.continuous=false;voiceRec.onresult=function(e){let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}document.getElementById('voiceTranscript').textContent=final||interim||'Listening...';if(final){activeVoiceTarget.value=final;activeVoiceTarget.style.height='auto';activeVoiceTarget.style.height=Math.min(activeVoiceTarget.scrollHeight,80)+'px';}};voiceRec.onspeechend=()=>voiceRec.stop();voiceRec.onend=()=>stopVoice();voiceRec.onerror=(e)=>{toast(e.error==='not-allowed'?'Mic blocked — allow in Safari settings':e.error==='no-speech'?'No speech heard':'Voice error');stopVoice();};try{voiceRec.start();}catch(e){toast('Could not start mic');stopVoice();}}

@@ -45,9 +45,12 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .pill{font-size:10.5px;padding:4px 12px;border-radius:20px;border:1px solid var(--w2);background:transparent;color:var(--t4);cursor:pointer;font-family:var(--B)}
 .pill.on{background:var(--k4);color:var(--t2);border-color:var(--w3)}
 
-/* CARDS AREA — the one scroll container */
-.cards-area{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+/* CARDS AREA — block layout, not flex. Flex scroll containers are unreliable on iOS. */
+.cards-area{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px}
 .cards-area::-webkit-scrollbar{width:0}
+/* Gap between cards via margin on direct children */
+.cards-area > *{margin-bottom:10px}
+.cards-area > *:last-child{margin-bottom:0}
 
 /* CHAT PANEL */
 .chat-panel{width:100%;border-left:none;display:flex;flex-direction:column;overflow:hidden;min-height:0}
@@ -380,10 +383,13 @@ document.getElementById('settIconBtn').onclick=()=>mobileTab('settings',document
 
 function setView(v){
   cView=v;
-  document.getElementById('pgName').textContent={home:'Home',today:'Today',journal:'Journal',settings:'Settings'}[v]||v;
+  const names={home:'Home',today:'Today',journal:'Journal',settings:'Settings'};
+  document.getElementById('pgName').textContent=names[v]||v;
   const showPills=v==='home'||v==='all';
   document.getElementById('pillActive').style.display=showPills?'':'none';
   document.getElementById('pillAll').style.display=showPills?'':'none';
+  // hide pgbar entirely on settings (has its own title inside)
+  document.getElementById('pgbarEl').style.display=v==='settings'?'none':'';
   render();
 }
 function setFilter(f,el){cFilter=f;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));if(el)el.classList.add('on');render();}

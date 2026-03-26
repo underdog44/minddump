@@ -22,7 +22,7 @@
   --r:13px;--rsm:8px;--rxl:18px;
   --sit:env(safe-area-inset-top,0px);
   --sib:env(safe-area-inset-bottom,0px);
-  --app-height:100vh;
+  --app-height:100dvh;
   --vv-bottom:0px;
   --vv-top:0px;
   --keyboard-offset:0px;
@@ -31,9 +31,9 @@
   --D:"Cormorant Garamond",Georgia,serif;
   --B:"Inter",system-ui,sans-serif;
 }
-html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased;overflow:hidden;margin:0;padding:0;overscroll-behavior:none}
+html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased;overflow:hidden;margin:0;padding:0;overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 body{position:fixed;inset:0;width:100%}
-#app{height:var(--app-height);min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--k)}
+#app{height:100vh;height:100dvh;height:var(--app-height);min-height:100%;display:flex;flex-direction:column;overflow:hidden;background:var(--k)}
 
 /* TOP */
 .top{display:flex;align-items:center;padding:14px 16px 12px;padding-top:calc(14px + var(--sit));gap:10px;border-bottom:1px solid var(--w2);flex-shrink:0;min-height:var(--header-h)}
@@ -276,7 +276,7 @@ select.mi option{background:var(--k3)}
 #mv,#bp,#tp{min-width:0}
 textarea, input, select, button{-webkit-appearance:none;appearance:none}
 textarea{touch-action:manipulation}
-.sa,.ss,.msgs,#tch,.sb,.jbody-in,.je-modal-body{scrollbar-width:none}
+.sa,.ss,.msgs,#tch,.sb,.jbody-in,.je-modal-body{scrollbar-width:none;touch-action:pan-y}
 .sa::-webkit-scrollbar,.ss::-webkit-scrollbar,.msgs::-webkit-scrollbar,#tch::-webkit-scrollbar,.sb::-webkit-scrollbar,.jbody-in::-webkit-scrollbar,.je-modal-body::-webkit-scrollbar{width:0;height:0}
 body.keyboard-open .mobile-tabs{transform:translateY(100%)}
 body.keyboard-open .cp .cia, body.keyboard-open #tp .cia{padding-bottom:calc(8px + var(--keyboard-offset))}
@@ -1180,28 +1180,22 @@ if('serviceWorker'in navigator){
   const doc = document.documentElement;
   const body = document.body;
   let rafId = null;
+  let closeTimer = null;
 
   function commitViewportVars(){
     const vv = window.visualViewport;
     const layoutHeight = window.innerHeight || document.documentElement.clientHeight || screen.height;
-    const viewportHeight = vv ? vv.height : layoutHeight;
+    const visualHeight = vv ? vv.height : layoutHeight;
     const viewportTop = vv ? vv.offsetTop : 0;
-    const coveredBottom = Math.max(0, layoutHeight - (viewportHeight + viewportTop));
+    const coveredBottom = Math.max(0, layoutHeight - (visualHeight + viewportTop));
     const keyboardOffset = coveredBottom > 120 ? coveredBottom : 0;
 
-    doc.style.setProperty('--app-height', `${Math.round(viewportHeight)}px`);
+    doc.style.setProperty('--app-height', `${Math.round(layoutHeight)}px`);
     doc.style.setProperty('--vv-top', `${Math.round(viewportTop)}px`);
     doc.style.setProperty('--vv-bottom', `${Math.round(coveredBottom)}px`);
     doc.style.setProperty('--keyboard-offset', `${Math.round(keyboardOffset)}px`);
 
     body.classList.toggle('keyboard-open', keyboardOffset > 0);
-
-    const activeEl = document.activeElement;
-    if (activeEl && /^(TEXTAREA|INPUT)$/i.test(activeEl.tagName)) {
-      requestAnimationFrame(() => {
-        try { activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
-      });
-    }
   }
 
   function queueViewportVars(){
@@ -1209,10 +1203,22 @@ if('serviceWorker'in navigator){
     rafId = requestAnimationFrame(commitViewportVars);
   }
 
+  function queueKeyboardCloseRecovery(){
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      queueViewportVars();
+      setTimeout(queueViewportVars, 120);
+      setTimeout(queueViewportVars, 320);
+    }, 80);
+  }
+
   window.addEventListener('resize', queueViewportVars, { passive: true });
-  window.addEventListener('orientationchange', queueViewportVars, { passive: true });
+  window.addEventListener('orientationchange', () => {
+    queueViewportVars();
+    setTimeout(queueViewportVars, 200);
+  }, { passive: true });
   window.addEventListener('focusin', queueViewportVars, { passive: true });
-  window.addEventListener('focusout', () => setTimeout(queueViewportVars, 80), { passive: true });
+  window.addEventListener('focusout', queueKeyboardCloseRecovery, { passive: true });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', queueViewportVars, { passive: true });
@@ -1220,6 +1226,7 @@ if('serviceWorker'in navigator){
   }
 
   queueViewportVars();
+  setTimeout(queueViewportVars, 250);
 })();
 
 

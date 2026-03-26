@@ -30,8 +30,8 @@
 /* ── EXACT v3base skeleton — do not change these four rules ── */
 html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased;overflow:hidden}
 #app{height:100vh;display:flex;flex-direction:column}
-.main-area{flex:1;display:flex;overflow:hidden}
-.center{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.main-area{flex:1;display:flex;overflow:hidden;min-height:0}
+.center{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 
 /* TOP BAR */
 .topbar{display:flex;align-items:center;padding:12px 16px 10px;padding-top:calc(12px + var(--safe-top));border-bottom:1px solid var(--w2);flex-shrink:0;background:var(--k);gap:10px}
@@ -45,18 +45,18 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .pill{font-size:10.5px;padding:4px 12px;border-radius:20px;border:1px solid var(--w2);background:transparent;color:var(--t4);cursor:pointer;font-family:var(--B)}
 .pill.on{background:var(--k4);color:var(--t2);border-color:var(--w3)}
 
-/* CARDS AREA — the one scroll container, exact v3base */
-.cards-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+/* CARDS AREA — the one scroll container */
+.cards-area{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .cards-area::-webkit-scrollbar{width:0}
 
 /* CHAT PANEL */
-.chat-panel{width:100%;border-left:none;display:flex;flex-direction:column;overflow:hidden}
+.chat-panel{width:100%;border-left:none;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .chat-tabs{display:flex;border-bottom:1px solid var(--w2);flex-shrink:0}
 .ctab{flex:1;padding:11px 4px;text-align:center;font-size:11px;color:var(--t4);cursor:pointer;border-bottom:2px solid transparent;font-weight:400}
 .ctab.on{color:var(--t2);border-bottom-color:var(--t3)}
 .chat-pane{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0}
 .chat-pane.on{display:flex}
-.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px;display:flex;flex-direction:column;gap:7px;overscroll-behavior:contain}
+.msgs{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px;display:flex;flex-direction:column;gap:7px;overscroll-behavior:contain}
 .msgs::-webkit-scrollbar{width:0}
 .cm{max-width:92%}
 .cu{align-self:flex-end}.ca{align-self:flex-start}

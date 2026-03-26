@@ -46,7 +46,10 @@ html,body{
 }
 
 #app{
-  height:100vh;
+  /* Use dvh where supported (handles iOS keyboard), fall back to vh */
+  height:100dvh;
+  height:100vh; /* fallback first */
+  height:100dvh;
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -74,25 +77,27 @@ html,body{
 .ibtn:active{background:var(--k4)}
 
 /* ─── TAB PAGES ───────────────────────────────────── */
-/* v3base pattern: plain flex:1 container, overflow:hidden.
-   Pages are display:none by default, display:flex when active.
-   No position tricks, no grid — iOS measures this correctly. */
+/* Each page is position:absolute, fills the space between topbar and tabbar.
+   This is the most reliable approach on iOS — avoids flex height calculation bugs. */
 .pages{
   flex:1;
-  min-height:0;
+  position:relative;
   overflow:hidden;
-  display:flex;
-  flex-direction:column;
+  min-height:0;
 }
 .page{
-  display:none;
+  position:absolute;
+  inset:0;
+  display:flex;
   flex-direction:column;
-  flex:1;
   overflow:hidden;
-  min-height:0;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.18s ease;
 }
 .page.active{
-  display:flex;
+  opacity:1;
+  pointer-events:all;
 }
 
 /* ─── SCROLL AREA — the only scrollable thing on each page ─
@@ -514,7 +519,7 @@ select.mi option{background:var(--k3)}
   <div class="pages">
 
     <!-- ① ADD PAGE ──────────────────────────────────── -->
-    <div class="page" id="pg-add">
+    <div class="page active" id="pg-add">
       <div class="chat-tabs">
         <div class="ctab on" id="ct-brain" onclick="switchChat('brain')">Brain dump</div>
         <div class="ctab" id="ct-today" onclick="switchChat('today')">Today list</div>
@@ -813,11 +818,9 @@ function switchTab(tab){
   // Update settings icon visibility
   document.getElementById('settIconBtn').style.opacity = tab==='settings'?'0':'1';
   document.getElementById('settIconBtn').style.pointerEvents = tab==='settings'?'none':'all';
-  // Switch pages — display:none/flex, no position tricks
-  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
-  const pg = document.getElementById('pg-'+tab);
-  pg.classList.add('active');
-  pg.style.display='flex';
+  // Switch pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('pg-'+tab).classList.add('active');
   cTab = tab;
   // Render content
   if(tab==='home')    renderHome();
@@ -1536,9 +1539,8 @@ if('serviceWorker'in navigator){
 }
 
 // ── INIT ──────────────────────────────────────────────
-// Hide all pages first, then switchTab handles showing the right one
-document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
-switchTab('home');
+renderHome();       // pre-render so it's ready when user taps Home
+renderTodayList();  // populate today list in Add tab
 setTimeout(syncPush,2000);
 
 </script>

@@ -77,26 +77,33 @@ html,body{
 .ibtn:active{background:var(--k4)}
 
 /* ─── TAB PAGES ───────────────────────────────────── */
-/* Each page is position:absolute, fills the space between topbar and tabbar.
-   This is the most reliable approach on iOS — avoids flex height calculation bugs. */
+/* iOS Safari flex:1 + position:relative = unreliable height (causes black gap).
+   Fix: pages container is a grid where all children stack in cell 1/1.
+   Only the .active page is visible; others are hidden but not removed.
+   Grid gives the container an explicit measured height — no flex estimation. */
 .pages{
   flex:1;
-  position:relative;
-  overflow:hidden;
   min-height:0;
+  display:grid;
+  grid-template-rows:1fr;
+  grid-template-columns:1fr;
+  overflow:hidden;
 }
 .page{
-  position:absolute;
-  inset:0;
+  grid-row:1;
+  grid-column:1;
   display:flex;
   flex-direction:column;
   overflow:hidden;
-  opacity:0;
+  min-height:0;
+  visibility:hidden;
   pointer-events:none;
-  transition:opacity 0.18s ease;
+  /* No opacity trick — visibility:hidden keeps layout but hides content.
+     Crucially, the element still participates in grid sizing so the
+     container height is always correctly computed. */
 }
 .page.active{
-  opacity:1;
+  visibility:visible;
   pointer-events:all;
 }
 

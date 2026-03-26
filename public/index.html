@@ -26,7 +26,8 @@
   --B:"Inter",system-ui,sans-serif;
 }
 html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased;overflow:hidden;margin:0;padding:0}
-#app{height:calc(100vh - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;overflow:hidden}
+/* FIX 1: Use 100vh instead of subtracting the inset. This fills the screen. */
+#app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* TOP */
 .top{display:flex;align-items:center;padding:14px 16px 12px;padding-top:calc(14px + var(--sit));gap:10px;border-bottom:1px solid var(--w2);flex-shrink:0}
@@ -36,6 +37,7 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .ibtn:hover{background:var(--k4);border-color:var(--w3);color:var(--t3)}
 
 /* BODY */
+/* FIX 2: min-height: 0 allows children to scroll properly within a flexbox */
 .body{flex:1;display:flex;overflow:hidden;min-height:0}
 
 /* SIDEBAR */
@@ -54,6 +56,7 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .add-bkt:hover{background:var(--k3);color:var(--t3)}
 
 /* CENTER */
+/* FIX 3: min-height: 0 ensures the center panel respects its parents flex constraints */
 .ctr{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;min-width:0}
 .pgbar{padding:13px 18px 10px;display:flex;align-items:baseline;gap:10px;flex-shrink:0;border-bottom:1px solid var(--w2)}
 .pgname{font-family:var(--D);font-size:23px;font-weight:300;letter-spacing:0.4px;flex:1;color:var(--t1)}
@@ -61,7 +64,8 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .pill.on,.pill:hover{background:var(--k4);color:var(--t2);border-color:var(--w3)}
 
 /* SCROLL - CRITICAL FIX */
-.sa{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+/* FIX 4: Changed to overflow-y: scroll and added momentum touch scrolling */
+.sa{flex:1;overflow-y:scroll; -webkit-overflow-scrolling:touch; padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .sa::-webkit-scrollbar{width:0}
 
 /* STATS */
@@ -104,7 +108,7 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .gtime{font-size:10.5px;color:var(--t4);margin-top:3px}
 .gact{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
 .ab{font-size:10.5px;padding:3px 10px;border-radius:20px;border:1px solid var(--w2);background:transparent;color:var(--t4);cursor:pointer;transition:all 0.12s;font-family:var(--B)}
-.ab:hover{background:var(--k4);color:var(--t3);border-color:var(--w3)}
+.ab:hover{background:var(--k4);color:var(--t2);border-color:var(--w3)}
 .ab.dn:hover{color:#7ecfb0;border-color:rgba(126,207,176,0.3)}
 .ab.ed:hover{color:var(--t2);border-color:var(--w4)}
 .ab.rm:hover{color:#e8a0b4;border-color:rgba(232,160,180,0.3)}
@@ -141,6 +145,7 @@ html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-
 .je-modal-t{font-size:15px;font-family:var(--D);font-weight:300;color:var(--t2);line-height:1.85;white-space:pre-wrap;letter-spacing:0.15px}
 
 /* SETTINGS */
+/* FIX 5: Use scroll-y and webkit scrolling for settings as well */
 .ss{flex:1;overflow-y:scroll;overflow-x:hidden;padding:16px;-webkit-overflow-scrolling:touch;min-height:0}
 .ss::-webkit-scrollbar{width:0}
 .sg{background:var(--k2);border:1px solid var(--w2);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
@@ -237,7 +242,8 @@ select.mi option{background:var(--k3)}
   .cp.mon{display:flex}
   .cp:not(.mon){display:none}
 }
-.mobile-tabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* FIX 6: padding-bottom for the bar ensuring it goes all the way down. */
+.mobile-tabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2);padding-bottom:var(--sib)}
 .mtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;font-size:10px;color:var(--t3);transition:color 0.12s;border:none;background:transparent;font-family:var(--B)}
 .mtab.on{color:var(--t1)}
 .mtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 3px;cursor:pointer;font-size:9px;letter-spacing:0.3px;text-transform:uppercase;color:var(--t4);transition:color 0.12s;border:none;background:transparent;font-family:var(--B);font-weight:500}
@@ -272,7 +278,6 @@ select.mi option{background:var(--k3)}
   </div>
 
   <div class="body">
-    <!-- SIDEBAR (desktop) -->
     <div class="sb" id="sbEl">
       <div class="sbg">
         <div class="sbl">Spaces</div>
@@ -292,7 +297,6 @@ select.mi option{background:var(--k3)}
       </div>
     </div>
 
-    <!-- CENTER -->
     <div class="ctr mon" id="ctrEl">
       <div class="ss h" id="settEl">
         <div style="font-family:var(--D);font-size:22px;font-weight:300;margin-bottom:16px;letter-spacing:0.3px">Settings</div>
@@ -330,7 +334,6 @@ select.mi option{background:var(--k3)}
       </div>
     </div>
 
-    <!-- CHAT -->
     <div class="cp" id="cpEl">
       <div class="ctabs">
         <div class="ctab on" id="ct-b" onclick="sct('b')">Brain dump</div>
@@ -360,7 +363,7 @@ select.mi option{background:var(--k3)}
           <div class="ibox">
             <textarea class="cin" id="ti" rows="1" placeholder="Add task for today..."></textarea>
             <button class="mbtn2" id="mb2" title="Voice">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             </button>
             <button class="sbtn" onclick="addTT()">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -371,7 +374,6 @@ select.mi option{background:var(--k3)}
     </div>
   </div>
 
-  <!-- MOBILE TABS: Add → Today → Home → Journal → Settings -->
   <div class="mobile-tabs" id="mobileTabs">
     <button class="mtab" onclick="mobileTab('chat',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -396,7 +398,6 @@ select.mi option{background:var(--k3)}
   </div>
 </div>
 
-<!-- VOICE OVERLAY -->
 <div class="voice-overlay h" id="voiceOverlay">
   <div class="waveform" id="waveform">
     <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
@@ -408,7 +409,6 @@ select.mi option{background:var(--k3)}
   <button class="voice-cancel" onclick="stopVoice()">Cancel</button>
 </div>
 
-<!-- JOURNAL ENTRY MODAL -->
 <div class="je-modal-bg h" id="jModal">
   <div class="je-modal">
     <div class="je-modal-top">
@@ -423,7 +423,6 @@ select.mi option{background:var(--k3)}
   </div>
 </div>
 
-<!-- EDIT ITEM MODAL -->
 <div class="mbg h" id="eM"><div class="mdl">
   <h3>Edit item</h3>
   <div class="mfl"><label>Title</label><input class="mi" id="eT" type="text"/></div>
@@ -497,8 +496,6 @@ function pdt(text){
   const l=text.toLowerCase(),now=new Date();
   let h=null,m=0;
 
-  // Patterns: 10:38am, 10.38am, 10:38 am, 10.38 am, 10am, 10 am
-  // Also: "before 10am", "by 10am", "at 10am", "@ 10am"
   const tRe=/(?:before|by|at|@|around)?\s*(\d{1,2})(?:[:.:](\d{2}))?\s*(am|pm)/i;
   const tm=l.match(tRe);
   if(tm){
@@ -507,12 +504,10 @@ function pdt(text){
     if(mer==='pm'&&h<12)h+=12;
     if(mer==='am'&&h===12)h=0;
   }
-  // 24h: "at 14:30", "14:30"
   if(!tm){
     const t24=l.match(/(?:at|by|before)?\s*(\d{1,2}):(\d{2})(?!\s*[ap]m)/);
     if(t24){h=parseInt(t24[1]);m=parseInt(t24[2]);}
   }
-  // Written time: "half past ten", "quarter to three" — basic
   if(!tm&&h===null){
     if(/midnight/.test(l))h=0;
     else if(/noon|midday/.test(l))h=12;
@@ -552,9 +547,7 @@ function pdt(text){
   return{dueDate:null,timeframe:'Someday',priority:'low'};
 }
 
-// ── BUCKET DETECT ──
 function fuzzyMatch(a,b){
-  // Returns true if strings are similar (one is substring of other, or differ by 1-2 chars)
   a=a.toLowerCase();b=b.toLowerCase();
   if(a.includes(b)||b.includes(a))return true;
   if(Math.abs(a.length-b.length)>3)return false;
@@ -564,7 +557,6 @@ function fuzzyMatch(a,b){
 }
 function dBkt(text){
   const l=text.toLowerCase();
-  // Check custom buckets with fuzzy match
   for(const b of cBuckets){
     const bid=b.id.toLowerCase();
     const words=l.split(/\s+/);
@@ -575,12 +567,10 @@ function dBkt(text){
   if(/gym|doctor|medicine|health|workout|diet|sleep|hospital|dentist|yoga|fitness/.test(l))return'Health';
   if(/paint|draw|art|music|write|create|design|build|launch|channel|idea|startup|youtube/.test(l))return'Creative';
   if(/money|pay|bill|invest|bank|emi|expense|salary|tax/.test(l))return'Finance';
-  // Personal catches call/remind/buy/family
   if(/remind|call|pick|buy|order|shop|family|wife|kids|home|birthday|bday|friend|dinner|travel|trip|purchase/.test(l))return'Personal';
   return'Other';
 }
 
-// ── AUTO SUB-BUCKET ──
 function checkAutoSubBucket(text,bucket){
   const l=text.toLowerCase();
   const stop=new Set(['the','and','for','this','that','with','have','will','want','just','some','make','need','into','from','when','then','they','your','also','been','more','said','than','was','but','are','has','had','can','all','not','one','its','his','her','our','my','do','to','of','in','on','at','by','is','it','or','an','as','we','up','out','get','you','me','he','she','us','did','let','now','put','see','use','way','may','got','new','plan','idea','thing','today','soon','want','like','good']);
@@ -604,7 +594,6 @@ function checkAutoSubBucket(text,bucket){
   return null;
 }
 
-// ── BUCKET NAV ──
 function bnav(){
   const nav=document.getElementById('bNav');if(!nav)return;
   nav.innerHTML=allB().map(b=>{
@@ -615,17 +604,15 @@ function bnav(){
   if(sel)sel.innerHTML=allB().map(b=>`<option value="${esc(b.id)}">${esc(b.id)}</option>`).join('')+'<option value="Other">Other</option>';
 }
 
-// ── COUNTS ──
 function cnts(){
   const act=items.filter(i=>i.status==='active'),now=new Date();
   const tc=act.filter(i=>i.dueDate&&(isT(new Date(i.dueDate))||new Date(i.dueDate)<now)).length;
   const nh=document.getElementById('nc-h'),nt=document.getElementById('nc-t'),na=document.getElementById('nc-a');
-  if(nh){nh.textContent=tc;nh.className='nc'+(tc>0?' has':'');}
+  if(nh){nh.textContent=tc;nh.className='nc'+(tc>0?' has':portal.mksy ? 'has':'');}
   if(nt){nt.textContent=ttasks.filter(t=>!t.done).length;nt.className='nc'+(ttasks.filter(t=>!t.done).length>0?' has':'');}
   if(na){na.textContent=act.length;na.className='nc'+(act.length>0?' has':'');}
 }
 
-// ── MAIN RENDER ──
 function rm(){
   const area=document.getElementById('sa');if(!area)return;
   if(cView==='journal'){rj();return;}
@@ -639,7 +626,6 @@ function rm(){
     const ids=new Set(tl.map(i=>i.id));
     vi=[...tl,...nd.filter(i=>!ids.has(i.id))];
   }else if(cView==='today'){
-    // Today view handled separately with two sections
     vi=[];
   }else if(cView==='all'){vi=list;}
   else{vi=list.filter(i=>i.bucket===cView);}
@@ -687,7 +673,6 @@ function gi(item){
   return`<div class="gi"><div class="gbul" style="${dn?'opacity:0.1':''}"></div><div class="gbody"><div class="gtxt" style="${dn?'text-decoration:line-through;opacity:0.3':''}">${esc(item.title)}</div>${tl}${!dn?`<div class="gact"><button class="ab dn" onclick="md('${item.id}')">Done</button><button class="ab ed" onclick="oe('${item.id}')">Edit</button>${item.dueDate?`<button class="ab" onclick="os('${item.id}')">Reschedule</button>`:''}<button class="ab rm" onclick="di('${item.id}')">Remove</button></div>`:`<div class="gact"><button class="ab" onclick="ri('${item.id}')">Restore</button></div>`}</div></div>`;
 }
 
-// ── TODAY BOARD ──
 function tbHtml(){
   const ds=new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
   const rows=ttasks.length?ttasks.map((t,i)=>`<div class="tir"><div class="tck${t.done?' ck':''}" onclick="tgT(${i})"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tit${t.done?' dn':''}">${esc(t.text)}</div><button class="tdl" onclick="rmT(${i})">×</button></div>`).join(''):`<div style="font-size:11.5px;color:var(--t4);padding:2px 0;font-weight:300">Use "Today list" tab in chat →</div>`;
@@ -697,23 +682,16 @@ function tbHtml(){
 function todayViewHtml(){
   const now=new Date();
   const ds=now.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
-  // Schedule: all items with dueDate today, sorted by time
   const schedule=items.filter(i=>i.status==='active'&&i.dueDate&&isT(new Date(i.dueDate)))
     .sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
-  // Also overdue (past due not today) — show at top in red
   const overdue=items.filter(i=>i.status==='active'&&i.dueDate&&new Date(i.dueDate)<now&&!isT(new Date(i.dueDate)))
     .sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
-  // Tasks: manual today list
   const tasks=ttasks;
 
   let html='';
-
-  // Overdue strip
   if(overdue.length){
     html+=`<div style="background:rgba(232,160,180,0.05);border:1px solid rgba(232,160,180,0.13);border-radius:var(--rsm);padding:8px 13px;font-size:12px;color:#e8a0b4;flex-shrink:0">${overdue.length} overdue — <span style="cursor:pointer;text-decoration:underline" onclick="sv('all',null)">view all</span></div>`;
   }
-
-  // Today's schedule section
   html+=`<div class="td-section">
     <div class="td-sh">
       <div class="td-sl">Today's schedule</div>
@@ -743,8 +721,6 @@ function todayViewHtml(){
     html+=`<div style="font-size:12.5px;color:var(--t4);padding:14px 0;font-style:italic;font-family:var(--D)">Nothing scheduled for today</div>`;
   }
   html+=`</div>`;
-
-  // Tasks section
   html+=`<div class="td-section">
     <div class="td-sh">
       <div class="td-sl">Tasks</div>
@@ -761,18 +737,15 @@ function todayViewHtml(){
     html+=`<div style="font-size:12.5px;color:var(--t4);padding:10px 0;font-style:italic;font-family:var(--D)">Use "Today list" tab in chat to add tasks →</div>`;
   }
   html+=`</div>`;
-
   return html;
 }
 function tgT(i){ttasks[i].done=!ttasks[i].done;svT();}
 function rmT(i){ttasks.splice(i,1);svT();}
 function addTT(){const v=document.getElementById('ti').value.trim();if(!v)return;ttasks.push({id:gid(),text:v,done:false});document.getElementById('ti').value='';document.getElementById('ti').style.height='auto';svT();toast('Added to today');}
 
-// ── JOURNAL ──
 function rj(){
   const area=document.getElementById('sa');if(!area)return;
   const ds=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
-  // Always show empty fields — saved entries shown as cards below
   let html=`<div class="jwrite">
     <div class="jdate">${ds}</div>
     <input class="jhead-in" id="jH" type="text" placeholder="Title your entry..."/>
@@ -780,8 +753,6 @@ function rj(){
     <textarea class="jbody-in" id="jB" placeholder="Write freely, no limits..."></textarea>
     <div class="jftr"><button class="jsave" onclick="sjE()">Save entry</button></div>
   </div>`;
-
-  // Show ALL entries sorted by date — today's at top if saved
   const allEntries=[...journals].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(allEntries.length){
     html+=`<div class="jlbl">Saved entries</div>`;
@@ -809,7 +780,6 @@ function sjE(){
   const h=document.getElementById('jH')?.value?.trim()||'';
   const t=document.getElementById('jB')?.value?.trim()||'';
   if(!t&&!h){toast('Nothing to save');return;}
-  // If editing an existing entry, update it; otherwise create new
   let tk;
   if(window._editingJDate){
     tk=window._editingJDate;
@@ -823,11 +793,7 @@ function sjE(){
   }
   svJ();
   toast('Entry saved');
-  if(cView==='journal'){
-    // Force full re-render — this rebuilds the DOM including fresh empty inputs
-    rj();
-    // After rj() rebuilds DOM, inputs are fresh empty fields ready for next entry
-  }
+  if(cView==='journal'){ rj(); }
 }
 
 function openJModal(dateKey){
@@ -846,40 +812,33 @@ function editFromModal(){
   if(!j){closeJModal();return;}
   closeJModal();
   sv('journal',null);
-  // Pre-fill the journal editor with this entry's content
   setTimeout(()=>{
     const jh=document.getElementById('jH');
     const jb=document.getElementById('jB');
     if(jh)jh.value=j.heading||'';
     if(jb){jb.value=j.text||'';jb.style.height='auto';jb.style.height=Math.max(200,jb.scrollHeight)+'px';}
-    // Store which entry we're editing
     window._editingJDate=jModalDate;
     toast('Editing — tap Save entry when done');
   },100);
 }
 
-// ── ITEM ACTIONS ──
 function md(id){const i=items.find(x=>x.id===id);if(i){i.status='done';i.doneAt=new Date().toISOString();}sv2();toast('Done');}
 function di(id){items=items.filter(x=>x.id!==id);sv2();toast('Removed');}
 function ri(id){const i=items.find(x=>x.id===id);if(i){i.status='active';delete i.doneAt;}sv2();toast('Restored');}
 
-// ── EDIT ──
 function oe(id){eId=id;const item=items.find(x=>x.id===id);if(!item)return;document.getElementById('eT').value=item.title||'';document.getElementById('eB').value=item.bucket||'Other';document.getElementById('eP').value=item.priority||'low';document.getElementById('eD').value=item.dueDate?new Date(item.dueDate).toISOString().slice(0,16):'';document.getElementById('eTF').value=item.timeframe||'';document.getElementById('eM').classList.remove('h');}
 function ceM(){document.getElementById('eM').classList.add('h');eId=null;}
 function seM(){const item=items.find(x=>x.id===eId);if(!item){ceM();return;}item.title=document.getElementById('eT').value.trim()||item.title;item.bucket=document.getElementById('eB').value;item.priority=document.getElementById('eP').value;const dt=document.getElementById('eD').value;item.dueDate=dt?new Date(dt).toISOString():null;item.timeframe=document.getElementById('eTF').value||null;ceM();sv2();toast('Updated');}
 
-// ── SNOOZE ──
 function os(id){snId=id;document.getElementById('snM').classList.remove('h');}
 function cSn(){document.getElementById('snM').classList.add('h');snId=null;}
 document.getElementById('snO').addEventListener('change',function(){document.getElementById('snD').classList.toggle('h',this.value!=='custom');});
 function cfSn(){const item=items.find(x=>x.id===snId);if(!item){cSn();return;}const opt=document.getElementById('snO').value;const base=item.dueDate?new Date(item.dueDate):new Date();if(opt==='30m'){base.setMinutes(base.getMinutes()+30);item.dueDate=base.toISOString();}else if(opt==='1h'){base.setHours(base.getHours()+1);item.dueDate=base.toISOString();}else if(opt==='tomorrow'){const t=new Date(base);t.setDate(t.getDate()+1);item.dueDate=t.toISOString();}else if(opt==='nextweek'){const t=new Date(base);t.setDate(t.getDate()+7);item.dueDate=t.toISOString();}else if(opt==='custom'){const v=document.getElementById('snD').value;if(v)item.dueDate=new Date(v).toISOString();}cSn();sv2();toast('Rescheduled');}
 
-// ── BUCKETS ──
 document.getElementById('addBkt').onclick=()=>{document.getElementById('bM').classList.remove('h');setTimeout(()=>document.getElementById('bN').focus(),100);};
 function cbM(){document.getElementById('bM').classList.add('h');}
 function svB(){const n=document.getElementById('bN').value.trim();if(!n)return;const c=document.getElementById('bC').value;cBuckets.push({id:n,c});svB2();cbM();document.getElementById('bN').value='';toast('"'+n+'" created');}
 
-// ── VIEWS ──
 function sv(v,el){
   cView=v;
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -890,14 +849,12 @@ function sv(v,el){
 }
 function sf(f,el){cFilter=f;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));if(el)el.classList.add('on');rm();}
 
-// ── SETTINGS ──
 document.getElementById('sBtn').onclick=()=>{document.getElementById('settEl').classList.remove('h');document.getElementById('mv').style.display='none';};
 function hS(){document.getElementById('settEl').classList.add('h');document.getElementById('mv').style.display='';}
 function expData(){const b=new Blob([JSON.stringify({items,ttasks,journals,cBuckets},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='minddump.json';a.click();}
 function clrDone(){items=items.filter(i=>i.status!=='done');sv2();toast('Done items cleared');}
 function nukeAll(){items=[];ttasks=[];journals=[];sv2();svT();svJ();toast('Reset complete');}
 
-// ── PUSH NOTIFICATIONS ──
 let pushSub=null;
 const VAPID_PUBLIC=localStorage.getItem('vapid_pub')||'';
 
@@ -919,10 +876,7 @@ async function setupPush(){
     document.getElementById('pushStatus').textContent='Active ✓';
     document.getElementById('pushStatus').style.color='#7ecfb0';
     toast('Push notifications enabled!');
-  }catch(e){
-    toast('Push setup failed: '+e.message);
-    console.error(e);
-  }
+  }catch(e){ toast('Push setup failed: '+e.message); console.error(e); }
 }
 
 async function getVapidKey(){
@@ -967,7 +921,6 @@ function urlBase64ToUint8Array(b64){
   return o;
 }
 
-// Check push status on load
 (async function(){
   const subStr=localStorage.getItem('push_sub');
   const el=document.getElementById('pushStatus');
@@ -976,7 +929,6 @@ function urlBase64ToUint8Array(b64){
   }
 })();
 
-// ── CHAT INPUT — fixed send button ──
 const ci=document.getElementById('ci');
 let isSending=false;
 ci.addEventListener('input',function(){
@@ -988,7 +940,6 @@ document.getElementById('sb').onclick=()=>sm();
 
 function am(txt,who){
   const msgs=document.getElementById('msgs');
-  // Cap at 40 messages to prevent freeze
   const all=msgs.querySelectorAll('.cm');
   if(all.length>40)all[0].remove();
   const d=document.createElement('div');d.className='cm c'+who;
@@ -1016,7 +967,6 @@ async function sm(){
   hty();
   const{dueDate,timeframe,priority}=pdt(val);
   const bucket=result.bucket||dBkt(val);
-  // Always use local date parser — Gemini returns UTC which causes +5:30 offset bug
   const finalDue=dueDate;
   const item={id:gid(),title:result.title||val,bucket,dueDate:finalDue,timeframe:finalDue?null:(result.timeframe||timeframe),status:'active',createdAt:new Date().toISOString(),priority:result.priority||priority,source:'chat'};
   items.unshift(item);
@@ -1031,7 +981,6 @@ async function sm(){
   if(sbEl)sbEl.disabled=false;
 }
 
-// ── TODAY CHAT TAB ──
 function sct(tab){
   document.getElementById('ct-b').classList.toggle('on',tab==='b');
   document.getElementById('ct-t').classList.toggle('on',tab==='t');
@@ -1042,7 +991,6 @@ const ti=document.getElementById('ti');
 ti.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px';});
 ti.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addTT();}});
 
-// ── VOICE with WAVEFORM ──
 let voiceRec=null,audioCtx=null,analyser=null,waveRAF=null;
 
 function startVoice(targetInput){
@@ -1117,11 +1065,9 @@ function stopWaveform(){
   if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;analyser=null;}
 }
 
-// Wire voice buttons
 document.getElementById('mb').addEventListener('click',()=>startVoice(document.getElementById('ci')));
 document.getElementById('mb2').addEventListener('click',()=>startVoice(document.getElementById('ti')));
 
-// ── MOBILE ──
 function mobileTab(tab,el){return ms(tab,el);}
 function ms(tab,el){
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('on'));
@@ -1132,10 +1078,8 @@ function ms(tab,el){
   else{ctr.classList.add('mon');cp.classList.remove('mon');hS();sv(tab,null);}
 }
 
-// ── SERVICE WORKER ──
 if('serviceWorker'in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
-    console.log('SW registered');
     navigator.serviceWorker.addEventListener('message',e=>{
       if(e.data?.type==='notif-click'){
         const item=items.find(i=>i.id===e.data.id);
@@ -1145,9 +1089,7 @@ if('serviceWorker'in navigator){
   }).catch(e=>console.log('SW error',e));
 }
 
-// ── INIT ──
 bnav();cnts();rm();
-// Auto-sync push subscriptions on load
 setTimeout(syncPush,2000);
 
 if(!items.length){

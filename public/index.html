@@ -25,18 +25,8 @@
   --D:"Cormorant Garamond",Georgia,serif;
   --B:"Inter",system-ui,sans-serif;
 }
-html,body{margin:0;padding:0;background:var(--k);overflow:hidden}
-body{color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased}
-#app{
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  /* 100svh = exact visible area on iOS Safari, no browser-bar gap */
-  height:100svh;
-  height:100dvh;
-  max-height:100svh;
-  max-height:100dvh;
-}
+html,body{height:100%;background:var(--k);color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased;overflow:hidden;margin:0;padding:0}
+#app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* TOP */
 .top{display:flex;align-items:center;padding:14px 16px 12px;padding-top:calc(14px + var(--sit));gap:10px;border-bottom:1px solid var(--w2);flex-shrink:0}
@@ -71,16 +61,7 @@ body{color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased}
 .pill.on,.pill:hover{background:var(--k4);color:var(--t2);border-color:var(--w3)}
 
 /* SCROLL - CRITICAL FIX */
-.sa{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  padding:14px 16px 20px;
-  min-height:0;
-}
-.sa>*{margin-bottom:10px}
-.sa>*:last-child{margin-bottom:0}
+.sa{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .sa::-webkit-scrollbar{width:0}
 
 /* STATS */
@@ -95,7 +76,8 @@ body{color:var(--t1);font-family:var(--B);-webkit-font-smoothing:antialiased}
 .tbt{font-family:var(--D);font-size:15px;font-weight:300;flex:1;letter-spacing:0.3px}
 .tbd{font-size:10px;color:var(--t4)}
 .tbl{padding:10px 14px;display:flex;flex-direction:column;gap:5px;min-height:36px}
-.tir{display:flex;align-items:center;gap:9px;padding:3px 0}
+.tir{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--w1)}
+.tir:last-child{border-bottom:none}
 .tck{width:14px;height:14px;border-radius:3px;border:1px solid var(--w3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
 .tck.ck{background:var(--t3);border-color:var(--t3)}
 .tck.ck svg{opacity:1}.tck svg{opacity:0}
@@ -255,7 +237,7 @@ select.mi option{background:var(--k3)}
   .cp.mon{display:flex}
   .cp:not(.mon){display:none}
 }
-.mtabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.mtabs{display:none;border-top:1px solid var(--w2);flex-shrink:0;background:var(--k2)}
 .mtab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 3px;cursor:pointer;font-size:9px;letter-spacing:0.3px;text-transform:uppercase;color:var(--t4);transition:color 0.12s;border:none;background:transparent;font-family:var(--B);font-weight:500}
 .mtab.on{color:var(--t1)}
 .em{text-align:center;padding:40px 20px;color:var(--t4);font-family:var(--D);font-size:15px;font-weight:300;letter-spacing:0.3px;font-style:italic;flex-shrink:0}
@@ -496,6 +478,7 @@ const allB=()=>[...DB,...cBuckets];
 function sv2(){localStorage.setItem('md3_i',JSON.stringify(items));bnav();cnts();rm();syncPush();}
 function svT(){localStorage.setItem('md3_t',JSON.stringify(ttasks));if(cView==='home'||cView==='today')rm();}
 function svJ(){localStorage.setItem('md3_j',JSON.stringify(journals));}
+function delJournal(dateKey){if(!confirm('Delete this journal entry?'))return;journals=journals.filter(j=>j.date!==dateKey);svJ();if(cView==='journal')rj();toast('Entry deleted');}
 function svB2(){localStorage.setItem('md3_b',JSON.stringify(cBuckets));bnav();}
 
 // ── UTILS ──
@@ -786,7 +769,6 @@ function addTT(){const v=document.getElementById('ti').value.trim();if(!v)return
 // ── JOURNAL ──
 function rj(){
   const area=document.getElementById('sa');if(!area)return;
-  const tk=new Date().toDateString();
   const ds=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
   // Always show empty fields — saved entries shown as cards below
   let html=`<div class="jwrite">
@@ -798,17 +780,23 @@ function rj(){
   </div>`;
 
   // Show ALL entries sorted by date — today's at top if saved
-  const allEntries=journals.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const allEntries=[...journals].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(allEntries.length){
     html+=`<div class="jlbl">Saved entries</div>`;
     html+=allEntries.map(j=>{
       const preview=(j.text||'').slice(0,120).replace(/\n/g,' ');
-      const isToday=j.date===tk;
-      const dateStr=isToday?'Today':new Date(j.date).toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
-      return`<div class="je-card" onclick="openJModal('${j.date}')">
-        <div class="je-date" style="${isToday?'color:var(--t2)':''}">${dateStr}${isToday?' · just saved':''}</div>
-        ${j.heading?`<div class="je-title">${esc(j.heading)}</div>`:''}
-        <div class="je-preview">${esc(preview)}${(j.text||'').length>120?'…':''}</div>
+      const jd=new Date(j.date);
+      const isToday=jd.toDateString()===new Date().toDateString();
+      const dateStr=(isToday?'Today, ':'')+jd.toLocaleDateString([],{day:'numeric',month:'short'})+'  '+jd.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+      return`<div class="je-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div onclick="openJModal('${j.date}')" style="flex:1;cursor:pointer">
+            <div class="je-date">${dateStr}</div>
+            ${j.heading?`<div class="je-title">${esc(j.heading)}</div>`:''}
+            <div class="je-preview">${esc(preview)}${(j.text||'').length>120?'…':''}</div>
+          </div>
+          <button onclick="delJournal('${j.date}')" style="background:none;border:none;color:var(--t4);cursor:pointer;font-size:16px;padding:0 2px;flex-shrink:0;line-height:1" title="Delete">×</button>
+        </div>
       </div>`;
     }).join('');
   }
@@ -819,10 +807,10 @@ function sjE(){
   const h=document.getElementById('jH')?.value?.trim()||'';
   const t=document.getElementById('jB')?.value?.trim()||'';
   if(!t&&!h){toast('Nothing to save');return;}
-  const tk=new Date().toDateString();
+  // Each save = new entry with unique timestamp key
+  const tk=new Date().toISOString();
   const entry={date:tk,heading:h,text:t};
-  const i=journals.findIndex(j=>j.date===tk);
-  if(i>=0)journals[i]=entry;else journals.unshift(entry);
+  journals.unshift(entry);
   svJ();
   toast('Entry saved');
   if(cView==='journal'){

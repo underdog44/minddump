@@ -74,34 +74,25 @@ html,body{
 .ibtn:active{background:var(--k4)}
 
 /* ─── TAB PAGES ───────────────────────────────────── */
-/* iOS Safari flex:1 + position:relative = unreliable height (causes black gap).
-   Fix: pages container is a grid where all children stack in cell 1/1.
-   Only the .active page is visible; others are hidden but not removed.
-   Grid gives the container an explicit measured height — no flex estimation. */
+/* v3base pattern: plain flex:1 container, overflow:hidden.
+   Pages are display:none by default, display:flex when active.
+   No position tricks, no grid — iOS measures this correctly. */
 .pages{
   flex:1;
   min-height:0;
-  display:grid;
-  grid-template-rows:1fr;
-  grid-template-columns:1fr;
   overflow:hidden;
-}
-.page{
-  grid-row:1;
-  grid-column:1;
   display:flex;
   flex-direction:column;
+}
+.page{
+  display:none;
+  flex-direction:column;
+  flex:1;
   overflow:hidden;
   min-height:0;
-  visibility:hidden;
-  pointer-events:none;
-  /* No opacity trick — visibility:hidden keeps layout but hides content.
-     Crucially, the element still participates in grid sizing so the
-     container height is always correctly computed. */
 }
 .page.active{
-  visibility:visible;
-  pointer-events:all;
+  display:flex;
 }
 
 /* ─── SCROLL AREA — the only scrollable thing on each page ─
@@ -523,7 +514,7 @@ select.mi option{background:var(--k3)}
   <div class="pages">
 
     <!-- ① ADD PAGE ──────────────────────────────────── -->
-    <div class="page active" id="pg-add">
+    <div class="page" id="pg-add">
       <div class="chat-tabs">
         <div class="ctab on" id="ct-brain" onclick="switchChat('brain')">Brain dump</div>
         <div class="ctab" id="ct-today" onclick="switchChat('today')">Today list</div>
@@ -822,9 +813,11 @@ function switchTab(tab){
   // Update settings icon visibility
   document.getElementById('settIconBtn').style.opacity = tab==='settings'?'0':'1';
   document.getElementById('settIconBtn').style.pointerEvents = tab==='settings'?'none':'all';
-  // Switch pages
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('pg-'+tab).classList.add('active');
+  // Switch pages — display:none/flex, no position tricks
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+  const pg = document.getElementById('pg-'+tab);
+  pg.classList.add('active');
+  pg.style.display='flex';
   cTab = tab;
   // Render content
   if(tab==='home')    renderHome();
@@ -1543,8 +1536,9 @@ if('serviceWorker'in navigator){
 }
 
 // ── INIT ──────────────────────────────────────────────
-renderHome();       // pre-render so it's ready when user taps Home
-renderTodayList();  // populate today list in Add tab
+// Hide all pages first, then switchTab handles showing the right one
+document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
+switchTab('home');
 setTimeout(syncPush,2000);
 
 </script>

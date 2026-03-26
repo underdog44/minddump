@@ -809,10 +809,18 @@ function sjE(){
   const h=document.getElementById('jH')?.value?.trim()||'';
   const t=document.getElementById('jB')?.value?.trim()||'';
   if(!t&&!h){toast('Nothing to save');return;}
-  // Each save = new entry with unique timestamp key
-  const tk=new Date().toISOString();
-  const entry={date:tk,heading:h,text:t};
-  journals.unshift(entry);
+  // If editing an existing entry, update it; otherwise create new
+  let tk;
+  if(window._editingJDate){
+    tk=window._editingJDate;
+    const i=journals.findIndex(j=>j.date===tk);
+    const entry={date:tk,heading:h,text:t};
+    if(i>=0)journals[i]=entry;else journals.unshift(entry);
+    window._editingJDate=null;
+  } else {
+    tk=new Date().toISOString();
+    journals.unshift({date:tk,heading:h,text:t});
+  }
   svJ();
   toast('Entry saved');
   if(cView==='journal'){
@@ -834,10 +842,20 @@ function openJModal(dateKey){
 }
 function closeJModal(){document.getElementById('jModal').classList.add('h');jModalDate=null;}
 function editFromModal(){
+  const j=journals.find(e=>e.date===jModalDate);
+  if(!j){closeJModal();return;}
   closeJModal();
-  // Navigate to journal and scroll to entry — it's today-only edit for now
   sv('journal',null);
-  toast('Edit your entry above');
+  // Pre-fill the journal editor with this entry's content
+  setTimeout(()=>{
+    const jh=document.getElementById('jH');
+    const jb=document.getElementById('jB');
+    if(jh)jh.value=j.heading||'';
+    if(jb){jb.value=j.text||'';jb.style.height='auto';jb.style.height=Math.max(200,jb.scrollHeight)+'px';}
+    // Store which entry we're editing
+    window._editingJDate=jModalDate;
+    toast('Editing — tap Save entry when done');
+  },100);
 }
 
 // ── ITEM ACTIONS ──
